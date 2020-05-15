@@ -3,7 +3,7 @@
 //
 
 #include "Astar.h"
-
+#include <ros/ros.h>
 namespace pathplanning{
 
 void Astar::InitAstar(Mat& _Map, AstarConfig _config)
@@ -22,6 +22,7 @@ void Astar::InitAstar(Mat& _Map, Mat& Mask, AstarConfig _config)
 
     Map = _Map;
     config = _config;
+   
     neighbor = Mat(8, 2, CV_8S, neighbor8).clone();
 
     MapProcess(Mask);
@@ -58,7 +59,7 @@ void Astar::MapProcess(Mat& Mask)
     int width = Map.cols;
     int height = Map.rows;
     Mat _Map = Map.clone();
-
+// ROS_INFO("IN Before!\n");
     // Transform RGB to gray image
     if(_Map.channels() == 3)
     {
@@ -73,19 +74,22 @@ void Astar::MapProcess(Mat& Mask)
     {
         threshold(_Map.clone(), _Map, config.OccupyThresh, 255, CV_THRESH_BINARY);
     }
-
+// ROS_INFO("IN After!\n");
     // Inflate
     Mat src = _Map.clone();
     if(config.InflateRadius > 0)
     {
-        Mat se = getStructuringElement(MORPH_ELLIPSE, Size(2 * config.InflateRadius, 2 * config.InflateRadius));
-        erode(src, _Map, se);
+        Mat se = getStructuringElement(MORPH_RECT, Size(2 * config.InflateRadius, 2 * config.InflateRadius));
+        erode(src, _Map, se, Point(-1, -1), 6);
     }
 
     // Get mask
     bitwise_xor(src, _Map, Mask);
-
+    //imshow("Mask", Mask);
+    //waitKey(0);
+    //destroyAllWindows();
     // Initial LabelMap
+    // ROS_INFO("IN Bfter!\n");
     LabelMap = Mat::zeros(height, width, CV_8UC1);
     for(int y=0;y<height;y++)
     {
@@ -101,6 +105,7 @@ void Astar::MapProcess(Mat& Mask)
             }
         }
     }
+    // ROS_INFO("IN After!\n");
 }
 
 Node* Astar::FindPath()

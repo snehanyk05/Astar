@@ -42,6 +42,7 @@ int rate;
 //-------------------------------- Callback function ---------------------------------//
 void MapCallback(const nav_msgs::OccupancyGrid& msg)
 {
+   
     // Get parameter
     OccGridParam.GetOccupancyGridParam(msg);
 
@@ -87,6 +88,9 @@ void MapCallback(const nav_msgs::OccupancyGrid& msg)
 
 void StartPointCallback(const geometry_msgs::PoseWithCovarianceStamped& msg)
 {
+
+    ROS_INFO("startPoint: %f %f %d %d", msg.pose.pose.position.x, msg.pose.pose.position.y,
+            startPoint.x, startPoint.y);
     Point2d src_point = Point2d(msg.pose.pose.position.x, msg.pose.pose.position.y);
     OccGridParam.Map2ImageTransform(src_point, startPoint);
 
@@ -181,6 +185,10 @@ int main(int argc, char * argv[])
             else
             {
                 ROS_ERROR("Can not find a valid path");
+                path.header.stamp = ros::Time::now();
+                path.header.frame_id = "map";
+                path.poses.clear();
+                path_pub.publish(path);
             }
 
             // Set flag
